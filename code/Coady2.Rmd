@@ -1,0 +1,115 @@
+
+---
+output: pdf_document
+fontsize: 12pt
+always_allow_html: true
+header-includes:
+   - \usepackage{caption}
+   - \captionsetup{labelfont=bf, labelsep = newline}
+   - \usepackage{floatrow}
+   - \floatsetup[figure]{capposition=top}
+
+---
+
+```{r, echo=FALSE, message=FALSE, out.width = '100%'}
+setwd("c:/coady2")
+#knitr::include_graphics("grid.jpg")
+```
+
+\pagenumbering{gobble}
+\clearpage
+\thispagestyle{empty}
+
+\begin{titlepage}
+
+
+\end{titlepage}
+\captionsetup[table]{
+  labelsep=newline,
+justification=justified,
+  singlelinecheck=false, %textfont=it,
+}
+
+  
+```{r, results='asis', echo=FALSE, include=FALSE,}
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE)
+library(kableExtra)
+library(tidyverse)
+library(scales)
+library(lubridate)
+library(forecast)
+library(zoo)
+library(sjmisc)
+library(janitor)
+extrafont::loadfonts()
+library(knitr)
+```
+
+
+
+```{r, results='asis', echo=FALSE, include=FALSE,}
+
+PUF <- read.csv("PUF.CSV")
+PUF <- PUF %>% mutate(cnt=1)
+#PUF %>% filter(STFIPS==39)->STPUF
+TEMP = subset(PUF,select=+c(RACE,PSOURCE,cnt))
+
+TEMP$PSOURCE <-ordered(TEMP$PSOURCE,levels=c(-9,1,2,3,4,5,6,7),labels=c("Missing", "Self", "SUD Provider","Other Health", "School","EAP","Other Community","Criminal Justice"))
+stpufsum<-summarize(group_by(TEMP,RACE,PSOURCE),cnt=sum(cnt)) %>% filter(PSOURCE!="Missing")
+
+TEMP<-mutate(TEMP,RACECAT=case_when(
+  RACE==5~"White",
+  RACE==4~"Black",
+  RACE==-9|1|2|3|6|7|8|9~"Other"
+))
+
+TEMP %>% tabyl(RACECAT,PSOURCE)%>% 
+  adorn_totals(where="col") %>% adorn_totals(where="row") %>% 
+  adorn_percentages %>% 
+  adorn_pct_formatting(digits = 2) ->tab
+```  
+
+# TEDS 2018: Referral Source and Race
+
+The following tables have been produced from the SAMHSA TEDS dataset for 2018. TEDS-A is based on admission records for substance abuse treatment agencies reporting to their respective state treatment authorities. The dataset includes demographic information such as age, sex, race and substance abuse characteristics, such as substances used, age at first use, route of administration and referral source.^[Treatment Episode Data Set | CBHSQ Data. (2021). Retrieved 22 February 2021, from https://www.samhsa.gov/data/data-we-collect/teds-treatment-episode-data-set] The 2018 dataset includes almost 2 million treatment admissions from 48 states. 
+
+Table 1 presents all available treatment admissions from every state and shows that self-referral is the predominant referral source followed by criminal justice referrals. 
+
+Table 2 presents Ohio data, which shows criminal justice agencies constitute the most frequent source of referrals for the state.
+
+
+```{r, echo=FALSE, message=FALSE,warning=FALSE}
+kbl(tab, longtable = T,format.args = list(big.mark = " ", scientific = FALSE), caption = "Persons in Treatment for the U.S. by Referral Source and Race - 2018",  booktabs = T) %>%
+add_header_above(c(" ", "Referral Source (Percent)" = 9)) %>%
+kable_styling(latex_options = c("repeat_header"),full_width = TRUE,font_size=8) %>% column_spec(1, width="12em")
+```  
+
+
+```{r, results='asis', echo=FALSE, include=FALSE,}
+
+PUF <- read.csv("PUF.CSV")
+PUF <- PUF %>% mutate(cnt=1)
+PUF %>% filter(STFIPS==39)->STPUF
+TEMP = subset(STPUF,select=+c(RACE,PSOURCE,cnt))
+
+TEMP$PSOURCE <-ordered(TEMP$PSOURCE,levels=c(-9,1,2,3,4,5,6,7),labels=c("Missing", "Self", "SUD Provider","Other Health", "School","EAP","Other Community","Criminal Justice"))
+stpufsum<-summarize(group_by(TEMP,RACE,PSOURCE),cnt=sum(cnt)) %>% filter(PSOURCE!="Missing")
+
+TEMP<-mutate(TEMP,RACECAT=case_when(
+  RACE==5~"White",
+  RACE==4~"Black",
+  RACE==-9|1|2|3|6|7|8|9~"Other"
+))
+
+TEMP %>% tabyl(RACECAT,PSOURCE)%>% 
+  adorn_totals(where="col") %>% adorn_totals(where="row") %>% 
+  adorn_percentages %>% 
+  adorn_pct_formatting(digits = 2) ->tab
+```  
+
+
+```{r, echo=FALSE, message=FALSE,warning=FALSE}
+kbl(tab, longtable = T,format.args = list(big.mark = " ", scientific = FALSE), caption = "Persons in Treatment for Ohio by Referral Source and Race - 2018",  booktabs = T) %>%
+add_header_above(c(" ", "Referral Source (Percent)" = 9)) %>%
+kable_styling(latex_options = c("repeat_header"),full_width = TRUE,font_size=8) %>% column_spec(1, width="12em")
+```  
